@@ -1,6 +1,7 @@
 from src.api import HeadHunter
 from src.cls import DBManager
-from psycopg2.errors import UniqueViolation
+from psycopg2.errors import UniqueViolation, UndefinedTable
+
 
 if __name__ == "__main__":
 
@@ -18,6 +19,10 @@ if __name__ == "__main__":
 
     for company in companies:
         try:
+            DBManager.get_emp_data_saved(HeadHunter.get_employer_info(company))
+        except UndefinedTable:
+            print('\nСоздаются необходимые таблицы для хранения данных...')
+            DBManager.create_tables()
             DBManager.get_emp_data_saved(HeadHunter.get_employer_info(company))
         except UniqueViolation:
             continue
