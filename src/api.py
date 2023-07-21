@@ -7,7 +7,7 @@ class HeadHunter:
                  '3009025', '1868342',
                  '652744', '9739229',
                  '5714322', '9632510',
-                 '83554694', '9288781')
+                 '9288781', '23040')
 
     @classmethod
     def get_vacancies(cls, employer):
