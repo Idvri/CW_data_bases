@@ -5,6 +5,26 @@ from decimal import Decimal
 class DBManager:
 
     @classmethod
+    def create_tables(cls):
+        with psycopg2.connect(host='localhost', database='CW_DB', user='postgres', password='Nodar126') as connection:
+            with connection.cursor() as cur:
+                cur.execute('CREATE TABLE employers'
+                            '('
+                            '     employer_id int PRIMARY KEY,'
+                            '     employer_name varchar(255),'
+                            '     vacancies_count int'
+                            ');'
+                            ''
+                            'CREATE TABLE vacancies'
+                            '('
+                            '     vacancy_id int PRIMARY KEY,'
+                            '     employer_id int REFERENCES employers(employer_id),'
+                            '     vacancy_name varchar(255),'
+                            '     vacancy_salary int,'
+                            '     vacancy_url varchar(255)'
+                            ');')
+
+    @classmethod
     def get_companies_and_vacancies_count(cls):
         """Функция получает список всех компаний и количество вакансий у каждой компании."""
         with psycopg2.connect(host='localhost', database='CW_DB', user='postgres', password='Nodar126') as connection:
@@ -63,7 +83,6 @@ class DBManager:
             with connection.cursor() as cur:
                 info = (employer['id'], employer['name'], employer['open_vacancies'])
                 cur.execute('INSERT INTO employers VALUES (%s, %s, %s)', tuple(info))
-                connection.close()
 
     @classmethod
     def get_vac_data_saved(cls, vacancy):
