@@ -10,13 +10,18 @@ class HeadHunter:
                  '9288781', '23040')
 
     @classmethod
-    def get_vacancies(cls, employer):
-        response = requests.get(HeadHunter.api, params={'employer_id': employer, 'only_with_salary': 'True'})
-        vacancies = response.json()['items']
+    def get_vacancies(cls):
+        vacancies = []
+        for employer in HeadHunter.employers:
+            response = requests.get(HeadHunter.api, params={'employer_id': employer, 'only_with_salary': 'True'})
+            vacancies = vacancies + response.json()['items']
         return vacancies
 
     @classmethod
-    def get_employer_info(cls, employer):
-        response = requests.get(f'https://api.hh.ru/employers/{employer}')
-        employer_info = response.json()
-        return employer_info
+    def get_employers_info(cls):
+        employers = []
+        for employer in HeadHunter.employers:
+            response = requests.get(f'https://api.hh.ru/employers/{employer}')
+            resp_list = [response.json()]
+            employers = employers + resp_list
+        return employers
