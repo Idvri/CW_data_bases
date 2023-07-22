@@ -1,6 +1,6 @@
 from src.api import HeadHunter
 from src.cls import DBManager
-from psycopg2.errors import UniqueViolation, UndefinedTable
+from psycopg2.errors import DuplicateTable
 
 
 if __name__ == "__main__":
@@ -15,44 +15,35 @@ if __name__ == "__main__":
 
 Загрузка...''')
 
-    companies = HeadHunter.employers
-
-    for company in companies:
-        try:
-            DBManager.get_emp_data_saved(HeadHunter.get_employer_info(company))
-        except UndefinedTable:
-            print('\nСоздаются необходимые таблицы для хранения данных...')
-            DBManager.create_tables()
-            DBManager.get_emp_data_saved(HeadHunter.get_employer_info(company))
-        except UniqueViolation:
-            continue
-        finally:
-            vacancies = HeadHunter.get_vacancies(company)
-            for vacancy in vacancies:
-                try:
-                    DBManager.get_vac_data_saved(vacancy)
-                except UniqueViolation:
-                    continue
+    try:
+        connection, cursor = DBManager.get_connection()
+        DBManager.create_tables(cursor)
+        DBManager.get_emp_data_saved(cursor, HeadHunter.get_employers_info())
+        DBManager.get_vac_data_saved(cursor, HeadHunter.get_vacancies())
+        connection.commit()
+    except DuplicateTable:
+        connection, cursor = DBManager.get_connection()
 
     while True:
         user_choice = input('\nВаш выбор: ').lower()
 
         if user_choice == 'выйти':
 
+            connection.close()
             print('\nВы вышли из программы. Сеанс завершен.')
             break
 
         elif int(user_choice) == 1:
 
             print('\nВыгружаем информацию по вашему запросу...\n')
-            for info in DBManager.get_companies_and_vacancies_count():
+            for info in DBManager.get_companies_and_vacancies_count(cursor):
                 print(f'Название компании: {info[0]}. Кол-во вакансий: {info[1]}.')
             print('\nЧто-то ещё?')
 
         elif int(user_choice) == 2:
 
             print('\nВыгружаем информацию по вашему запросу...')
-            for info in DBManager.get_all_vacancies():
+            for info in DBManager.get_all_vacancies(cursor):
                 print(f'''\nНазвание компании: {info[0]}. 
 Название вакансии: {info[1]}.
 Размер зарплаты: {info[2]} руб.
@@ -62,13 +53,13 @@ if __name__ == "__main__":
         elif int(user_choice) == 3:
 
             print('\nВыгружаем информацию по вашему запросу...\n')
-            print(f'Средняя зарплата по вакансиям: {DBManager.get_avg_salary()} руб.')
+            print(f'Средняя зарплата по вакансиям: {DBManager.get_avg_salary(cursor)} руб.')
             print('\nЧто-то ещё?')
 
         elif int(user_choice) == 4:
 
             print('\nВыгружаем информацию по вашему запросу...')
-            for info in DBManager.get_vacancies_with_higher_salary():
+            for info in DBManager.get_vacancies_with_higher_salary(cursor):
                 print(f'''\nНазвание компании: {info[0]}. 
 Название вакансии: {info[1]}.
 Размер зарплаты: {info[2]} руб.
@@ -78,7 +69,7 @@ if __name__ == "__main__":
         elif int(user_choice) == 5:
             keyword = input('\nВведите ключевое слово: ')
             print('\nВыгружаем информацию по вашему запросу...')
-            vacancies_with_keyword = DBManager.get_vacancies_with_keyword(keyword)
+            vacancies_with_keyword = DBManager.get_vacancies_with_keyword(cursor, keyword)
 
             if len(vacancies_with_keyword) == 0:
                 print('\nТаких вакансий нет.')
